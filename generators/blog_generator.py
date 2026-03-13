@@ -1,6 +1,7 @@
 """
 初心者SEO記事ジェネレーター
 """
+import json
 import logging
 import re
 from pathlib import Path
@@ -8,6 +9,8 @@ import urllib.request
 from html.parser import HTMLParser
 from .base import BaseGenerator
 from utils.random_selector import pick_unused_keyword
+
+INTERNAL_LINKS_FILE = Path(__file__).parent.parent / "data" / "internal_links.json"
 
 logger = logging.getLogger(__name__)
 KNOWLEDGE_DIR = Path(__file__).parent.parent / "knowledge" / "base"
@@ -41,6 +44,50 @@ class _TextExtractor(HTMLParser):
 class BlogGenerator(BaseGenerator):
     category = "blog"
     prompt_file = "blog.md"
+
+    def _apply_internal_links(self, html: str) -> str:
+        """internal_links.json を元に店舗名・キーワードをリンクに置換する"""
+        if not INTERNAL_LINKS_FILE.exists():
+            return html
+        mapping: dict = json.loads(INTERNAL_LINKS_FILE.read_text(encoding="utf-8"))
+
+        def replace_outside_tags(keyword: str, url: str, text: str) -> tuple[str, int]:
+            """<a>タグの外にあるキーワードを最初の1件だけリンクに置換する"""
+            result = []
+            replaced = 0
+            # タグとテキストに分割して処理
+            parts = re.split(r"(<[^>]+>)", text)
+            in_anchor = False
+            for part in parts:
+                if re.match(r"<a[\s>]", part, re.IGNORECASE):
+                    in_anchor = True
+                    result.append(part)
+                elif re.match(r"</a>", part, re.IGNORECASE):
+                    in_anchor = False
+                    result.append(part)
+                elif part.startswith("<"):
+                    result.append(part)
+                else:
+                    if not in_anchor and not replaced:
+                        new_part, n = re.subn(
+                            re.escape(keyword),
+                            f'<a href="{url}">{keyword}</a>',
+                            part,
+                            count=1,
+                        )
+                        result.append(new_part)
+                        replaced += n
+                    else:
+                        result.append(part)
+            return "".join(result), replaced
+
+        # 長いキーワードを優先してマッチ（短いものが先にヒットするのを防ぐ）
+        for keyword in sorted(mapping, key=len, reverse=True):
+            url = mapping[keyword]
+            html, count = replace_outside_tags(keyword, url, html)
+            if count:
+                logger.debug(f"内部リンク挿入: {keyword} → {url}")
+        return html
 
     def _load_knowledge(self) -> str:
         files = sorted(KNOWLEDGE_DIR.glob("*.md"))
@@ -80,5 +127,6 @@ class BlogGenerator(BaseGenerator):
         prompt = self.prompt_template.replace("{keyword}", keyword).replace("{knowledge}", full_knowledge)
         raw = self._call_ai(prompt)
         result = self._parse_output(raw)
+        result["content"] = self._apply_internal_links(result["content"])
         result["keyword"] = keyword
         return result

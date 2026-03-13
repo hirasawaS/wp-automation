@@ -41,12 +41,12 @@ class BaseGenerator:
 
     def _parse_output(self, raw: str) -> dict:
         """AIの出力をパースしてdict形式に変換"""
-        # タイトル
-        title_match = re.search(r"タイトル[：:]\s*(.+)", raw)
+        # タイトル（同行 or 次行どちらでも対応）
+        title_match = re.search(r"タイトル[：:][^\S\n]*\n?\s*(.+)", raw)
         title = title_match.group(1).strip() if title_match else ""
 
-        # メタディスクリプション
-        meta_match = re.search(r"メタディスクリプション[：:]\s*(.+)", raw)
+        # メタディスクリプション（同行 or 次行どちらでも対応）
+        meta_match = re.search(r"メタディスクリプション[：:][^\S\n]*\n?\s*(.+)", raw)
         meta = meta_match.group(1).strip() if meta_match else ""
 
         # 本文: ```html...``` ブロック優先、なければ 本文：以降、なければ --- 以降

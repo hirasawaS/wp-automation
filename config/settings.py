@@ -18,3 +18,9 @@ AI_MODEL = "claude-sonnet-4-6"
 
 # ランダム選択時のシード（None=毎回ランダム）
 RANDOM_SEED = None
+
+# blog記事生成時に参照する外部URL
+BLOG_REFERENCE_URLS = [
+    "https://lounge-tapioca.com/",
+    "https://www.lounge-baito.com/",
+]

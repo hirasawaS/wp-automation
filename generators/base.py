@@ -2,6 +2,7 @@
 記事生成の基底クラス
 """
 import os
+import re
 import anthropic
 from pathlib import Path
 
@@ -40,28 +41,30 @@ class BaseGenerator:
 
     def _parse_output(self, raw: str) -> dict:
         """AIの出力をパースしてdict形式に変換"""
-        lines = raw.strip().split("\n")
-        title = ""
-        meta = ""
-        content_lines = []
-        in_content = False
+        # タイトル
+        title_match = re.search(r"タイトル[：:]\s*(.+)", raw)
+        title = title_match.group(1).strip() if title_match else ""
 
-        for line in lines:
-            if line.startswith("タイトル："):
-                title = line.replace("タイトル：", "").strip()
-            elif line.startswith("メタディスクリプション："):
-                meta = line.replace("メタディスクリプション：", "").strip()
-            elif line.startswith("本文："):
-                in_content = True
-                rest = line.replace("本文：", "").strip()
-                if rest:
-                    content_lines.append(rest)
-            elif in_content:
-                content_lines.append(line)
+        # メタディスクリプション
+        meta_match = re.search(r"メタディスクリプション[：:]\s*(.+)", raw)
+        meta = meta_match.group(1).strip() if meta_match else ""
+
+        # 本文: ```html...``` ブロック優先、なければ 本文：以降、なければ --- 以降
+        html_block = re.search(r"```html\s*([\s\S]+?)```", raw)
+        if html_block:
+            content = html_block.group(1).strip()
+        else:
+            body_match = re.search(r"本文[：:]\s*([\s\S]+?)(?:メタディスクリプション[：:]|$)", raw)
+            if body_match:
+                content = body_match.group(1).strip()
+            else:
+                # --- 以降をフォールバックとして使用
+                parts = re.split(r"\n---+\n", raw, maxsplit=1)
+                content = parts[1].strip() if len(parts) > 1 else ""
 
         return {
             "title": title,
-            "content": "\n".join(content_lines),
+            "content": content,
             "meta_description": meta,
             "category": self.category,
         }

@@ -129,4 +129,6 @@ class BlogGenerator(BaseGenerator):
         result = self._parse_output(raw)
         result["content"] = self._apply_internal_links(result["content"])
         result["keyword"] = keyword
+        if not result["title"]:
+            result["title"] = keyword
         return result

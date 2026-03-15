@@ -27,7 +27,7 @@ class BaseGenerator:
         from config.settings import AI_MODEL
         message = self.client.messages.create(
             model=AI_MODEL,
-            max_tokens=4096,
+            max_tokens=8192,
             messages=[{"role": "user", "content": prompt}],
         )
         return message.content[0].text
@@ -41,24 +41,24 @@ class BaseGenerator:
 
     def _parse_output(self, raw: str) -> dict:
         """AIの出力をパースしてdict形式に変換"""
-        # タイトル（同行 or 次行どちらでも対応）
-        title_match = re.search(r"タイトル[：:][^\S\n]*\n?\s*(.+)", raw)
+        # タイトル（コロンあり/なし・同行/次行どちらでも対応）
+        title_match = re.search(r"タイトル[：:]?[^\S\n]*\n?\s*(.+)", raw)
         title = title_match.group(1).strip() if title_match else ""
 
-        # メタディスクリプション（同行 or 次行どちらでも対応）
-        meta_match = re.search(r"メタディスクリプション[：:][^\S\n]*\n?\s*(.+)", raw)
+        # メタディスクリプション（コロンあり/なし・同行/次行どちらでも対応）
+        meta_match = re.search(r"メタディスクリプション[：:]?[^\S\n]*\n?\s*(.+)", raw)
         meta = meta_match.group(1).strip() if meta_match else ""
 
-        # 本文: ```html...``` ブロック優先、なければ 本文：以降、なければ --- 以降
+        # 本文: ```html...``` ブロック優先、なければ 本文：/## 本文 以降
         html_block = re.search(r"```html\s*([\s\S]+?)```", raw)
         if html_block:
             content = html_block.group(1).strip()
         else:
-            body_match = re.search(r"本文[：:]\s*([\s\S]+?)(?:メタディスクリプション[：:]|$)", raw)
+            # コロンあり/なし、## ヘッダー形式も対応
+            body_match = re.search(r"(?:##\s*)?本文[：:]?\s*\n([\s\S]+?)(?=\n(?:—|##\s*(?:推奨|実装|タグ|抜粋|メタ))|$)", raw)
             if body_match:
                 content = body_match.group(1).strip()
             else:
-                # --- 以降をフォールバックとして使用
                 parts = re.split(r"\n---+\n", raw, maxsplit=1)
                 content = parts[1].strip() if len(parts) > 1 else ""
 

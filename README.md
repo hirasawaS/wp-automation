@@ -164,6 +164,19 @@ python main.py news "【期間限定】入店祝い金10万円！〇〇ラウン
 ```
 
 > デフォルトは `status: draft`（下書き）で投稿される。
+
+### 一括生成（まとめて複数件）
+
+```bash
+# SEO記事を30件まとめて生成・投稿
+python bulk_generate.py --type blog --count 30
+
+# 移籍記事を30件まとめて生成・投稿
+python bulk_generate.py --type migration --count 30
+```
+
+- 記事間に10秒のウェイトを挟む（APIレート制限対策）
+- 途中でエラーが出ても止まらず続行し、最後に失敗一覧を表示
 > `config/settings.py` の `DEFAULT_POST_STATUS = "publish"` に変更すると即公開になる。
 
 ### キーワードの追加

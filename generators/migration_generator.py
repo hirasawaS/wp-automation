@@ -81,4 +81,6 @@ class MigrationGenerator(BaseGenerator):
         raw = self._call_ai(prompt)
         result = self._parse_output(raw)
         result["topic"] = topic
+        if not result["title"]:
+            result["title"] = topic
         return result

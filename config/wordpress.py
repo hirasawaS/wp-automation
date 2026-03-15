@@ -23,3 +23,4 @@ CATEGORY_IDS = {
 API_BASE = f"{WP_URL}/wp-json/wp/v2"
 POSTS_ENDPOINT = f"{API_BASE}/posts"
 MEDIA_ENDPOINT = f"{API_BASE}/media"
+TAGS_ENDPOINT = f"{API_BASE}/tags"

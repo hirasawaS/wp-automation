@@ -226,8 +226,8 @@ bash scheduler/cron_setup.sh
 
 ```python
 DAILY_LIMITS = {
-    "blog": 10,      # ← ここを変更
-    "migration": 5,
+    "blog": 20,      # ← ここを変更
+    "migration": 20,
 }
 ```
 

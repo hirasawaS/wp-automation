@@ -1,11 +1,14 @@
 """
 投稿数・スケジュール設定
 """
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 # 1日あたりの投稿数上限
 DAILY_LIMITS = {
-    "blog": 10,        # 初心者SEO記事
-    "migration": 5,    # 移籍者向け記事
+    "blog": 20,        # 初心者SEO記事
+    "migration": 20,    # 移籍者向け記事
     "shop": 0,         # 手動 or 不定期 (0=制限なし・手動)
     "news": 0,         # キャンペーン・不定期 (0=制限なし・手動)
 }
@@ -14,7 +17,7 @@ DAILY_LIMITS = {
 DEFAULT_POST_STATUS = "draft"
 
 # 記事生成に使うAIモデル
-AI_MODEL = "claude-sonnet-4-6"
+AI_MODEL = "claude-haiku-4-5-20251001"
 
 # ランダム選択時のシード（None=毎回ランダム）
 RANDOM_SEED = None
@@ -24,3 +27,6 @@ BLOG_REFERENCE_URLS = [
     "https://lounge-tapioca.com/",
     "https://www.lounge-baito.com/",
 ]
+
+# Pexels API キー（アイキャッチ画像取得用）
+PEXELS_API_KEY = os.getenv("PEXELS_API_KEY", "")

@@ -62,9 +62,19 @@ class BaseGenerator:
                 parts = re.split(r"\n---+\n", raw, maxsplit=1)
                 content = parts[1].strip() if len(parts) > 1 else ""
 
+        # タグ
+        tags_match = re.search(r"タグ[：:][^\S\n]*\n?\s*(.+)", raw)
+        tags = [t.strip() for t in tags_match.group(1).split(",") if t.strip()] if tags_match else []
+
+        # 抜粋
+        excerpt_match = re.search(r"抜粋[：:][^\S\n]*\n?\s*(.+)", raw)
+        excerpt = excerpt_match.group(1).strip() if excerpt_match else ""
+
         return {
             "title": title,
             "content": content,
             "meta_description": meta,
+            "tags": tags,
+            "excerpt": excerpt,
             "category": self.category,
         }
